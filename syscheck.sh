@@ -1,0 +1,186 @@
+#!/bin/bash	
+
+############################################
+## Created by Kirill Rudenko ###############
+############################################
+
+echo "The system is being checked. Please hold on..."
+sleep 1
+#
+#define variables
+#
+#Linux distro check
+#
+if grep ^NAME /etc/*release | grep CentOS; then
+	DISTRO="CentOS"
+elif cat /etc/*release | grep ^NAME | grep Red; then
+	DISTRO="RedHat"
+elif cat /etc/*release | grep ^NAME | grep Fedora; then
+    DISTRO="Fedora"
+ elif cat /etc/*release | grep ^NAME | grep Ubuntu; then
+    DISTRO="Ubuntu"
+ elif cat /etc/*release | grep ^NAME | grep Debian ; then
+ 	DISTRO="Debian"
+fi
+#
+#some short variables
+#
+PROC=$(nproc) #number CPU cores
+OSARCH=$(uname -m) #whether 32bit or 64bit system
+RAM=$(free -mh |grep Mem |awk '{print $2}') #RAM ammount
+UMEM=$(du "$HOME" -sh |sort -n |uniq -c |awk '{print $2}') #used ammount of disc space
+FMEM=$(df "$HOME" -h |sort -n |uniq -c |awk '{print $5}' |sed 's/Avail//g')  #free ammount of disc space
+INO=$(df "$HOME" -ih |awk '{print $4}' |sed -e 's/IFree//g;/^$/d;') #ammount of free Inodes space
+TIMEZONE=$(timedatectl |grep "Time zone" |awk '{print $3 $4 $5}')
+FIP=$(hostname -I)
+RIP=$(dig +short myip.opendns.com @resolver1.opendns.com)
+#
+#checking whether virtualization is possible 
+#
+VIRT=$(egrep -c "(svm|vmx)" /proc/cpuinfo) 
+if [ "$VIRT" = 0 ]; then
+	VIRT="NO"
+else
+	VIRT="YES"
+fi
+#
+#MySQL check
+#
+if [ -f /usr/bin/mysql ]; then
+	MYSQLV=$(mysql --version)
+	MYSQL="MySQL is installed on this machine. Version:
+	$MYSQLV"
+else
+	MYSQL="MySQL is not installed on this machine"
+fi
+#
+#Java check
+#
+if [ -f /usr/bin/java ]; then
+	JAVA="Java is installed on this machine. 
+	Use java -version to check the version."
+else
+	JAVA="Java is not installed on this machine"
+fi
+echo "System parameters have been checked. Checking the Hard Drive performance. It can take a while."
+echo "Your patience is much appreciated"
+sleep 1
+## hard disc type and health check ##
+HDT=$(cat /sys/block/sda/queue/rotational)  #are we on HDD or SSD?
+if [ "$HDT" = 0 ]; then
+	HDT="SSD"
+else
+	HDT="HDD"
+fi
+#
+#Hard drive read/write check presuming the large ammount of data processing
+#
+
+##
+OPTVALUE=70 #optimal value for I/O on hard drive in MB/s
+f_hdd_big(){
+BDISKWRITE=$(dd if=/dev/zero of=tempfile bs=5M count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
+BDISKREAD=$(dd if=tempfile of=/dev/null bs=5M count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
+rm -rf tempfile
+
+if [ $(echo "$BDISKWRITE<=$OPTVALUE"|bc) -gt 0 ]; then
+	BDISKWRS="Speed is less then 70 MB/s which is quite poor"
+else 
+	BDISKWRS="Speed is more then 70 MB/s which is OK"
+fi
+
+if [ $(echo "$BDISKREAD<=$OPTVALUE"|bc) -gt 0 ]; then
+	BDISKRDS="Speed is less then 70 MB/s which is quite poor"
+else
+	BDISKRDS="Speed more then 70 MB/s which is OK"
+fi
+}
+#
+#Hard drive read/write check presuming the low ammount of data processing
+#
+f_hdd_low(){
+SDISKWRITE=$(dd if=/dev/zero of=tempfile bs=512 count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
+SDISKREAD=$(dd if=tempfile of=/dev/null bs=512 count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
+rm -rf tempfile
+
+if [ $(echo "SBDISKWRITE<=$OPTVALUE"|bc) -gt 0 ]; then
+	SDISKWRS="speed is less then 70 MB/s which is quite poor"
+else 
+	SDISKWRS="speed is more then 70 MB/s which is OK"
+fi
+
+if [ $(echo "$SDISKREAD<=$OPTVALUE"|bc) -gt 0 ]; then
+	SDISKRDS="speed is less then 70 MB/s which is quite poor"
+else
+	SDISKRDS="speed more then 70 MB/s which is OK"
+fi
+}
+#
+#lets drop the caches
+f_cache_drop(){
+nohup sudo sysctl vm.drop_caches=3 > /dev/null 2>&1
+rm -rf nohup.out
+}
+#
+#
+#main part
+#
+f_hdd_check_b(){
+	f_hdd_big
+	f_cache_drop
+	f_hdd_big
+	f_cache_drop
+}
+f_hdd_check_s(){
+	f_hdd_low
+	f_cache_drop
+	f_hdd_low
+	f_cache_drop
+}
+##
+for i in {1..2}; do f_hdd_check_b; done
+for i in {1..2}; do f_hdd_check_s; done
+echo "Generating the report..."
+sleep 1
+#
+# checking whether previous log(s) are stored
+#
+if [ -f sysinfo.txt ]; then
+	rm -rf sysinfo.txt
+fi
+#
+#redirecting output to the TXT file
+#
+cat << EOF >> sysinfo.txt
+###############################
+
+--- Linux type - $DISTRO
+--- CPU cores - $PROC 
+--- System architechture - $OSARCH
+--- Available ammount of RAM - $RAM
+--- Virtualization support - $VIRT
+--- Free Disc Space: $FMEM
+--- Used Disc Space: $UMEM
+--- Inodes - $INO
+--- Hard Drive type - $HDT
+--- $MYSQL
+--- $JAVA
+--- Timezone set to: $TIMEZONE
+--- Private IP address: $FIP
+--- Public IP address: $RIP
+##############################
+
+--- Hard Drive WRITE performance presuming large ammount of data processing- $BDISKWRITE MB per second
+Average $BDISKWRS
+--- Hard Drive READ performance presuming large ammount of data processing- $BDISKREAD MB per second
+Average $BDISKRDS
+##############################
+--- Hard Drive WRITE performance presuming low ammount of data processing- $SDISKWRITE MB per second
+Average $SDISKWRS
+--- Hard Drive READ performance presuming low ammount of data processing- $SDISKREAD MB per second
+Average $SDISKRDS
+
+##############################
+EOF
+echo "The system analize was finished successfully. Kindly check sysinfo.txt for details."
+sleep 1
