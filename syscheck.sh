@@ -11,15 +11,15 @@ sleep 1
 #
 #Linux distro check
 #
-if grep ^NAME /etc/*release | grep CentOS; then
+if grep ^NAME /etc/*release | grep CentOS > /dev/null 2>&1; then
 	DISTRO="CentOS"
-elif cat /etc/*release | grep ^NAME | grep Red; then
+elif cat /etc/*release | grep ^NAME | grep Red > /dev/null 2>&1; then
 	DISTRO="RedHat"
-elif cat /etc/*release | grep ^NAME | grep Fedora; then
+elif cat /etc/*release | grep ^NAME | grep Fedora > /dev/null 2>&1; then
     DISTRO="Fedora"
- elif cat /etc/*release | grep ^NAME | grep Ubuntu; then
+ elif cat /etc/*release | grep ^NAME | grep Ubuntu > /dev/null 2>&1; then
     DISTRO="Ubuntu"
- elif cat /etc/*release | grep ^NAME | grep Debian ; then
+ elif cat /etc/*release | grep ^NAME | grep Debian > /dev/null 2>&1; then
  	DISTRO="Debian"
 fi
 #
@@ -79,17 +79,17 @@ fi
 ##
 OPTVALUE=70 #optimal value for I/O on hard drive in MB/s
 f_hdd_big(){
-BDISKWRITE=$(dd if=/dev/zero of=tempfile bs=5M count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
-BDISKREAD=$(dd if=tempfile of=/dev/null bs=5M count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
+BDISKWRITE=$(dd if=/dev/zero of=tempfile bs=5M count=1024 2>&1 |awk '{print $8}' |sed -e '/^$/d;s/,/./g')
+BDISKREAD=$(dd if=tempfile of=/dev/null bs=5M count=1024 2>&1 |awk '{print $8}' |sed -e '/^$/d;s/,/./g')
 rm -rf tempfile
 
-if [ $(echo "$BDISKWRITE<=$OPTVALUE"|bc) -gt 0 ]; then
+if [ $(echo "$BDISKWRITE <= $OPTVALUE"|bc) -gt 0 ]; then
 	BDISKWRS="Speed is less then 70 MB/s which is quite poor"
 else 
 	BDISKWRS="Speed is more then 70 MB/s which is OK"
 fi
 
-if [ $(echo "$BDISKREAD<=$OPTVALUE"|bc) -gt 0 ]; then
+if [ $(echo "$BDISKREAD <= $OPTVALUE"|bc) -gt 0 ]; then
 	BDISKRDS="Speed is less then 70 MB/s which is quite poor"
 else
 	BDISKRDS="Speed more then 70 MB/s which is OK"
@@ -99,17 +99,17 @@ fi
 #Hard drive read/write check presuming the low ammount of data processing
 #
 f_hdd_low(){
-SDISKWRITE=$(dd if=/dev/zero of=tempfile bs=512 count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
-SDISKREAD=$(dd if=tempfile of=/dev/null bs=512 count=1024 2>&1 |awk '{print $10}' |sed -e '/^$/d;s/,/./g')
+SDISKWRITE=$(dd if=/dev/zero of=tempfile bs=512 count=1024 2>&1 |awk '{print $8}' |sed -e '/^$/d;s/,/./g')
+SDISKREAD=$(dd if=tempfile of=/dev/null bs=512 count=1024 2>&1 |awk '{print $8}' |sed -e '/^$/d;s/,/./g')
 rm -rf tempfile
 
-if [ $(echo "SBDISKWRITE<=$OPTVALUE"|bc) -gt 0 ]; then
+if [ $(echo "$SDISKWRITE <= $OPTVALUE"|bc) -gt 0 ]; then
 	SDISKWRS="speed is less then 70 MB/s which is quite poor"
 else 
 	SDISKWRS="speed is more then 70 MB/s which is OK"
 fi
 
-if [ $(echo "$SDISKREAD<=$OPTVALUE"|bc) -gt 0 ]; then
+if [ $(echo "$SDISKREAD <= $OPTVALUE"|bc) -gt 0 ]; then
 	SDISKRDS="speed is less then 70 MB/s which is quite poor"
 else
 	SDISKRDS="speed more then 70 MB/s which is OK"
@@ -126,12 +126,14 @@ rm -rf nohup.out
 #main part
 #
 f_hdd_check_b(){
+	f_cache_drop
 	f_hdd_big
 	f_cache_drop
 	f_hdd_big
 	f_cache_drop
 }
 f_hdd_check_s(){
+	f_cache_drop
 	f_hdd_low
 	f_cache_drop
 	f_hdd_low
