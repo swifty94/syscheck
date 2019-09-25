@@ -9,7 +9,8 @@ echo "The script is installing. Please hold on"
 
 cd /usr/local/bin/
 
-sudo wget $URL -O syscheck
+sudo nohup wget $URL -O syscheck > /dev/null 2>&1
+rm -rf nohup.out
 sudo chmod +x syscheck
 sudo chown $USR:$USR syscheck
 echo "The script was installed successfully"
