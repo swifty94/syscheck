@@ -11,6 +11,10 @@ Usage:
   System parameters have been checked. Checking the Hard Drive performance. It can take a while.
   
   Your patience is much appreciated
+  
+  Generating the report...
+  
+  The system analize was finished successfully. Kindly check sysinfo.txt for details.
 
 Example of output:
 ------------------------
