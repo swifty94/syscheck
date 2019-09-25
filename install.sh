@@ -13,6 +13,7 @@ sudo nohup wget $URL -O syscheck > /dev/null 2>&1
 rm -rf nohup.out
 sudo chmod +x syscheck
 sudo chown $USR:$USR syscheck
+cd && rm install.sh
 echo "The script was installed successfully"
 echo "You can use the command "syscheck" in your terminal"
 echo "Enjoy"
