@@ -5,7 +5,7 @@
 ############################################
 
 echo "The script is installing. Please hold on"
-sleep 15
+sleep 10
 f_install(){
 USR=$(whoami)
 URL='https://raw.githubusercontent.com/swifty94/syscheck/master/syscheck'
@@ -17,9 +17,9 @@ sudo chown $USR:$USR syscheck
 cd && rm install.sh
 }
 f_install
-sleep 15
+sleep 5
 echo "The script was installed successfully"
-sleep 15
+sleep 5
 echo "You can use the command "syscheck" in your terminal"
-sleep 15
+sleep 5
 echo "Enjoy"
