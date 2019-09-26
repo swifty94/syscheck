@@ -77,22 +77,22 @@ fi
 #
 
 ##
-OPTVALUE=70 #optimal value for I/O on hard drive in MB/s
+OPTVALUE=100 #optimal value for I/O on hard drive in MB/s
 f_hdd_big(){
 BDISKWRITE=$(dd if=/dev/zero of=tempfile bs=5M count=1024 2>&1 |awk '{print $8}' |sed -e '/^$/d;s/,/./g')
 BDISKREAD=$(dd if=tempfile of=/dev/null bs=5M count=1024 2>&1 |awk '{print $8}' |sed -e '/^$/d;s/,/./g')
 rm -rf tempfile
 
 if [ $(echo "$BDISKWRITE <= $OPTVALUE"|bc) -gt 0 ]; then
-	BDISKWRS="Speed is less then 70 MB/s which is quite poor"
+	BDISKWRS="Speed is less then 100 MB/s which is quite poor"
 else 
-	BDISKWRS="Speed is more then 70 MB/s which is OK"
+	BDISKWRS="Speed is more then 100 MB/s which is OK"
 fi
 
 if [ $(echo "$BDISKREAD <= $OPTVALUE"|bc) -gt 0 ]; then
-	BDISKRDS="Speed is less then 70 MB/s which is quite poor"
+	BDISKRDS="Speed is less then 100 MB/s which is quite poor"
 else
-	BDISKRDS="Speed more then 70 MB/s which is OK"
+	BDISKRDS="Speed more then 100 MB/s which is OK"
 fi
 }
 #
@@ -104,15 +104,15 @@ SDISKREAD=$(dd if=tempfile of=/dev/null bs=512 count=1024 2>&1 |awk '{print $8}'
 rm -rf tempfile
 
 if [ $(echo "$SDISKWRITE <= $OPTVALUE"|bc) -gt 0 ]; then
-	SDISKWRS="speed is less then 70 MB/s which is quite poor"
+	SDISKWRS="speed is less then 100 MB/s which is quite poor"
 else 
-	SDISKWRS="speed is more then 70 MB/s which is OK"
+	SDISKWRS="speed is more then 100 MB/s which is OK"
 fi
 
 if [ $(echo "$SDISKREAD <= $OPTVALUE"|bc) -gt 0 ]; then
-	SDISKRDS="speed is less then 70 MB/s which is quite poor"
+	SDISKRDS="speed is less then 100 MB/s which is quite poor"
 else
-	SDISKRDS="speed more then 70 MB/s which is OK"
+	SDISKRDS="speed more then 100 MB/s which is OK"
 fi
 }
 #
