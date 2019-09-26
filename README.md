@@ -1,6 +1,8 @@
 Installation:
 --------------
+
 wget https://raw.githubusercontent.com/swifty94/syscheck/master/install.sh -O install.sh && bash install.sh
+
 ----------------
 Usage:
 ---------------
@@ -15,6 +17,10 @@ Usage:
   Generating the report...
   
   The system analize was finished successfully. Kindly check sysinfo.txt for details.
+
+Installation process:
+------------------------
+![](https://raw.githubusercontent.com/swifty94/syscheck/master/install_usage.png)
 
 Example of output:
 ------------------------
